@@ -10,7 +10,8 @@
       "Bash(npm run build:*)",
       "Bash(taskkill:*)",
       "Bash(timeout 120 npm run build:*)",
-      "Bash(git rev-parse:*)"
+      "Bash(git rev-parse:*)",
+      "Bash(psql:*)"
     ],
     "deny": [],
     "ask": []
