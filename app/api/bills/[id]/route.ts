@@ -68,7 +68,7 @@ export async function PATCH(
           select: { id: true, name: true, email: true }
         },
         pickup: {
-          select: { id: true, pickupDate: true, weight: true }
+          select: { id: true, scheduledDate: true, volume: true }
         }
       }
     });
