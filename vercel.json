@@ -1,12 +1,5 @@
 {
   "buildCommand": "npm run build",
   "installCommand": "npm ci && npx prisma generate",
-  "outputDirectory": ".next",
-  "framework": "nextjs",
-  "functions": {
-    "api/**/*.func": {
-      "memory": 1024,
-      "maxDuration": 60
-    }
-  }
+  "framework": "nextjs"
 }
