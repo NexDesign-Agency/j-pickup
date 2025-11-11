@@ -1,4 +1,6 @@
 /** @type {import('next').NextConfig} */
+const path = require('path')
+
 const nextConfig = {
   reactStrictMode: true,
   experimental: {
@@ -10,10 +12,11 @@ const nextConfig = {
     domains: ['localhost'],
   },
   webpack: (config) => {
-    config.resolve.extensionAlias = {
-      '.js': ['.ts', '.tsx', '.js', '.jsx'],
-      '.jsx': ['.tsx', '.jsx'],
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      '@': path.resolve(__dirname),
     }
+    config.resolve.extensions = ['.tsx', '.ts', '.js', '.jsx', '.json']
     return config
   },
 }
