@@ -4,11 +4,12 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Header from '@/components/Header'
-import { 
-  Home, 
-  Package, 
-  FileText, 
-  DollarSign, 
+import { useAuth } from '@/contexts/AuthContext'
+import {
+  Home,
+  Package,
+  FileText,
+  DollarSign,
   User,
   TrendingUp,
   Clock,
@@ -20,30 +21,37 @@ import {
 
 export default function AdminPage() {
   const router = useRouter()
-  const [user, setUser] = useState<any>(null)
+  const { user, loading: authLoading } = useAuth()
   const [stats, setStats] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('home')
 
   useEffect(() => {
-    const token = localStorage.getItem('token')
-    if (!token) {
+    if (!authLoading && !user) {
       router.push('/login')
       return
     }
 
-    const userData = JSON.parse(localStorage.getItem('user') || '{}')
-    setUser(userData)
-    fetchStats(token)
-  }, [])
+    if (user) {
+      fetchStats()
+    }
+  }, [user, authLoading])
 
-  const fetchStats = async (token: string) => {
+  const fetchStats = async () => {
     try {
+      const token = localStorage.getItem('token')
+      if (!token) return
+
       const res = await fetch('/api/dashboard', {
         headers: { 'Authorization': `Bearer ${token}` }
       })
-      const data = await res.json()
-      setStats(data)
+
+      if (res.ok) {
+        const data = await res.json()
+        setStats(data)
+      } else {
+        console.error('Failed to fetch stats:', res.status)
+      }
     } catch (error) {
       console.error('Error fetching stats:', error)
     } finally {
@@ -51,7 +59,7 @@ export default function AdminPage() {
     }
   }
 
-  if (loading) {
+  if (authLoading || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
