@@ -10,14 +10,21 @@ export interface AuthUser {
 export async function verifyAuth(request: NextRequest): Promise<AuthUser | null> {
   try {
     const token = request.headers.get('authorization')?.replace('Bearer ', '');
-    
+
     if (!token) {
+      console.log('No token provided in request');
+      return null;
+    }
+
+    if (!process.env.JWT_SECRET) {
+      console.error('JWT_SECRET is not configured!');
       return null;
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET!) as AuthUser;
     return decoded;
-  } catch (error) {
+  } catch (error: any) {
+    console.error('JWT verification failed:', error.message);
     return null;
   }
 }

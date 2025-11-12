@@ -42,9 +42,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         })
         setUser(response.data)
         localStorage.setItem('user', JSON.stringify(response.data))
-      } catch (error) {
-        localStorage.removeItem('token')
-        localStorage.removeItem('user')
+      } catch (error: any) {
+        console.error('Auth check failed:', error.response?.status, error.response?.data)
+        // Only clear auth if it's actually unauthorized (401)
+        // Don't clear on network errors or server errors (500)
+        if (error.response?.status === 401) {
+          localStorage.removeItem('token')
+          localStorage.removeItem('user')
+        } else {
+          // For other errors, try to use cached user data
+          const cachedUser = localStorage.getItem('user')
+          if (cachedUser) {
+            try {
+              setUser(JSON.parse(cachedUser))
+            } catch (e) {
+              console.error('Failed to parse cached user')
+            }
+          }
+        }
       }
     }
     setLoading(false)
