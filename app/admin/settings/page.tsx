@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Header from '@/components/Header'
 import { Save, DollarSign, Settings as SettingsIcon, Bell, Clock } from 'lucide-react'
 
 export default function AdminSettingsPage() {
@@ -125,9 +126,11 @@ export default function AdminSettingsPage() {
   ]
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 pb-20 md:pb-6">
+      <Header />
+
       <div className="max-w-7xl mx-auto px-4 py-8">
-        {/* Header */}
+        {/* Page Title */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Pengaturan Sistem</h1>
           <p className="text-gray-600 mt-2">Kelola pengaturan aplikasi JelantahGO</p>
