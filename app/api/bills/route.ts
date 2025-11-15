@@ -11,11 +11,13 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get('status');
 
     const where: any = {};
-    
+
+    // CUSTOMER can only see their own bills
+    // ADMIN and WAREHOUSE can see all bills
     if (user.role === 'CUSTOMER') {
       where.userId = user.id;
     }
-    
+
     if (status) {
       where.status = status;
     }
@@ -25,9 +27,11 @@ export async function GET(request: NextRequest) {
       include: {
         pickup: {
           include: {
-            customer: { select: { name: true, email: true } }
+            customer: { select: { id: true, name: true, email: true, phone: true, address: true } },
+            courier: { select: { id: true, name: true, phone: true } }
           }
-        }
+        },
+        user: { select: { id: true, name: true, email: true, phone: true, address: true } }
       },
       orderBy: { createdAt: 'desc' }
     });

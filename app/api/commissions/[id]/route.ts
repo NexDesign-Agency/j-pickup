@@ -8,7 +8,7 @@ export async function PATCH(
 ) {
   try {
     const user = await verifyAuth(request);
-    
+
     if (!user) {
       return unauthorizedResponse();
     }
@@ -16,38 +16,31 @@ export async function PATCH(
     const body = await request.json();
     const { status } = body;
 
-    // Get bill
-    const bill = await prisma.bill.findUnique({
+    // Get commission
+    const commission = await prisma.commission.findUnique({
       where: { id: params.id },
-      include: { user: true }
+      include: {
+        user: true,
+        pickup: true
+      }
     });
 
-    if (!bill) {
+    if (!commission) {
       return NextResponse.json(
-        { message: 'Bill not found' },
+        { message: 'Commission not found' },
         { status: 404 }
       );
     }
 
-    // Check permission
-    // ADMIN and WAREHOUSE can mark bills as paid
-    // CUSTOMER can only view their own bills
-    if (user.role === 'CUSTOMER' && bill.userId !== user.id) {
+    // Only ADMIN and WAREHOUSE can update commission status
+    if (user.role !== 'ADMIN' && user.role !== 'WAREHOUSE') {
       return NextResponse.json(
-        { message: 'Forbidden' },
+        { message: 'Only ADMIN and WAREHOUSE can update commission status' },
         { status: 403 }
       );
     }
 
-    // Only ADMIN and WAREHOUSE can update bill status
-    if (status && user.role !== 'ADMIN' && user.role !== 'WAREHOUSE') {
-      return NextResponse.json(
-        { message: 'Only ADMIN and WAREHOUSE can update bill status' },
-        { status: 403 }
-      );
-    }
-
-    // Update bill
+    // Update commission
     let updateData: any = {};
 
     if (status === 'PAID') {
@@ -59,18 +52,18 @@ export async function PATCH(
       // Create notification
       await prisma.notification.create({
         data: {
-          userId: bill.userId,
-          title: 'Pembayaran Diterima',
-          message: `Pembayaran tagihan ${bill.invoiceNumber} telah diterima`,
+          userId: commission.userId,
+          title: 'Komisi Dibayarkan',
+          message: `Komisi ${commission.type} sebesar Rp ${commission.amount.toLocaleString()} telah dibayarkan`,
           type: 'PAYMENT_RECEIVED',
-          relatedId: bill.id
+          relatedId: commission.id
         }
       });
     } else if (status === 'CANCELLED') {
       updateData = { status: 'CANCELLED' };
     }
 
-    const updatedBill = await prisma.bill.update({
+    const updatedCommission = await prisma.commission.update({
       where: { id: params.id },
       data: updateData,
       include: {
@@ -78,14 +71,14 @@ export async function PATCH(
           select: { id: true, name: true, email: true }
         },
         pickup: {
-          select: { id: true, scheduledDate: true, volume: true }
+          select: { id: true, scheduledDate: true, volume: true, actualVolume: true }
         }
       }
     });
 
-    return NextResponse.json(updatedBill);
+    return NextResponse.json(updatedCommission);
   } catch (error) {
-    console.error('Update bill error:', error);
+    console.error('Update commission error:', error);
     return NextResponse.json(
       { message: 'Internal server error' },
       { status: 500 }

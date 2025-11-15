@@ -9,11 +9,22 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status');
+    const type = searchParams.get('type'); // COURIER or AFFILIATE
 
-    const where: any = { userId: user.id };
-    
+    const where: any = {};
+
+    // COURIER and AFFILIATE can only see their own commissions
+    // ADMIN and WAREHOUSE can see all commissions
+    if (user.role === 'COURIER' || user.role === 'CUSTOMER') {
+      where.userId = user.id;
+    }
+
     if (status) {
       where.status = status;
+    }
+
+    if (type) {
+      where.type = type;
     }
 
     const commissions = await prisma.commission.findMany({
@@ -21,9 +32,11 @@ export async function GET(request: NextRequest) {
       include: {
         pickup: {
           include: {
-            customer: { select: { name: true } }
+            customer: { select: { id: true, name: true, email: true, phone: true } },
+            courier: { select: { id: true, name: true, phone: true } }
           }
-        }
+        },
+        user: { select: { id: true, name: true, email: true, phone: true, address: true } }
       },
       orderBy: { createdAt: 'desc' }
     });
