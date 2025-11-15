@@ -3,7 +3,7 @@ import { verifyAuth, unauthorizedResponse, forbiddenResponse } from '@/lib/auth'
 import prisma from '@/lib/prisma';
 import { normalizePhone } from '@/lib/utils';
 import bcrypt from 'bcryptjs';
-import { v4 as uuidv4 } from 'uuid';
+import { randomUUID } from 'crypto';
 
 export async function GET(request: NextRequest) {
   try {
@@ -120,7 +120,7 @@ export async function POST(request: NextRequest) {
     const hashedPassword = await bcrypt.hash(password, salt);
 
     // Create user with unique referral code
-    let referralCode = uuidv4().slice(0, 8).toUpperCase();
+    let referralCode = randomUUID().slice(0, 8).toUpperCase();
     let codeExists = true;
     while (codeExists) {
       const existing = await prisma.user.findUnique({
@@ -129,7 +129,7 @@ export async function POST(request: NextRequest) {
       if (!existing) {
         codeExists = false;
       } else {
-        referralCode = uuidv4().slice(0, 8).toUpperCase();
+        referralCode = randomUUID().slice(0, 8).toUpperCase();
       }
     }
 
