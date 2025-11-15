@@ -16,7 +16,8 @@ import {
   CheckCircle,
   Truck,
   Users,
-  Wallet
+  Wallet,
+  Settings
 } from 'lucide-react'
 
 export default function AdminPage() {
@@ -96,7 +97,7 @@ export default function AdminPage() {
       return [
         ...baseItems,
         { id: 'users', label: 'Users', icon: Users, href: '/admin/users' },
-        { id: 'bills', label: 'Bills', icon: FileText, href: '/bills' },
+        { id: 'settings', label: 'Settings', icon: Settings, href: '/admin/settings' },
         { id: 'profile', label: 'Profile', icon: User, href: '/profile' }
       ]
     }
