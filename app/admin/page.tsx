@@ -182,6 +182,13 @@ export default function AdminPage() {
                 <div className="text-sm md:text-base font-medium">User Management</div>
               </Link>
             )}
+
+            {user?.role === 'ADMIN' && (
+              <Link href="/admin/settings" className="group bg-gradient-to-r from-orange-500 to-orange-600 text-white p-4 md:p-6 rounded-xl hover:shadow-lg transition-all duration-300 hover:scale-105 text-center">
+                <div className="text-3xl md:text-4xl mb-2">⚙️</div>
+                <div className="text-sm md:text-base font-medium">Settings</div>
+              </Link>
+            )}
             
             <Link href="/pickups" className="group bg-gradient-to-r from-blue-500 to-blue-600 text-white p-4 md:p-6 rounded-xl hover:shadow-lg transition-all duration-300 hover:scale-105 text-center">
               <div className="text-3xl md:text-4xl mb-2">📋</div>
