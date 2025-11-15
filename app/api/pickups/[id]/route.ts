@@ -62,7 +62,7 @@ export async function PATCH(
     if (!user) return unauthorizedResponse();
 
     const body = await request.json();
-    const { status, courierId, warehouseId } = body;
+    const { status, courierId, warehouseId, photoProof, actualVolume } = body;
 
     const pickup = await prisma.pickup.findUnique({
       where: { id: params.id }
@@ -77,32 +77,67 @@ export async function PATCH(
 
     let updateData: any = {};
 
+    // Handle photo proof and actual volume updates (for IN_PROGRESS pickups)
+    if ((photoProof !== undefined || actualVolume !== undefined) && user.role === 'COURIER' && pickup.courierId === user.id) {
+      if (pickup.status !== 'IN_PROGRESS') {
+        return NextResponse.json(
+          { message: 'Can only update photo and volume during IN_PROGRESS status' },
+          { status: 400 }
+        );
+      }
+      if (photoProof !== undefined) updateData.photoProof = photoProof;
+      if (actualVolume !== undefined) updateData.actualVolume = parseFloat(actualVolume);
+    }
+
     // Handle status updates based on role
     if (status) {
-      if (status === 'ASSIGNED' && user.role === 'COURIER') {
+      // Courier accepting a pending pickup
+      if (status === 'ASSIGNED' && user.role === 'COURIER' && pickup.status === 'PENDING') {
         updateData = {
+          ...updateData,
           status: 'ASSIGNED',
           courierId: user.id
         };
-      } else if (status === 'IN_PROGRESS' && user.role === 'COURIER' && pickup.courierId === user.id) {
+      }
+      // Courier starting an assigned pickup
+      else if (status === 'IN_PROGRESS' && user.role === 'COURIER' && pickup.courierId === user.id && pickup.status === 'ASSIGNED') {
         updateData = {
+          ...updateData,
           status: 'IN_PROGRESS',
           actualDate: new Date()
         };
-      } else if (status === 'COMPLETED' && user.role === 'WAREHOUSE') {
+      }
+      // Courier completing a pickup
+      else if (status === 'COMPLETED' && user.role === 'COURIER' && pickup.courierId === user.id && pickup.status === 'IN_PROGRESS') {
+        // Validate that photo proof and actual volume are provided
+        if (!pickup.photoProof || !pickup.actualVolume) {
+          return NextResponse.json(
+            { message: 'Photo proof and actual volume are required before completing pickup' },
+            { status: 400 }
+          );
+        }
+
+        // Calculate actual prices based on actual volume
+        const actualTotalPrice = pickup.actualVolume * pickup.pricePerLiter;
+        const actualCourierFee = actualTotalPrice * 0.1;
+        const actualAffiliateFee = pickup.affiliateFee > 0 ? actualTotalPrice * 0.05 : 0;
+
         updateData = {
+          ...updateData,
           status: 'COMPLETED',
-          warehouseId: user.id
+          totalPrice: actualTotalPrice,
+          courierFee: actualCourierFee,
+          affiliateFee: actualAffiliateFee
         };
 
         // Create bill when completed
         const invoiceNumber = `INV-${Date.now()}`;
-        
+
         await prisma.bill.create({
           data: {
             pickupId: pickup.id,
             userId: pickup.customerId,
-            amount: pickup.totalPrice,
+            amount: actualTotalPrice,
             status: 'UNPAID',
             dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
             invoiceNumber
@@ -116,13 +151,13 @@ export async function PATCH(
               pickupId: pickup.id,
               userId: pickup.courierId,
               type: 'COURIER',
-              amount: pickup.courierFee,
+              amount: actualCourierFee,
               status: 'PENDING'
             }
           });
         }
 
-        if (pickup.affiliateFee > 0) {
+        if (actualAffiliateFee > 0) {
           const customer = await prisma.user.findUnique({
             where: { id: pickup.customerId },
             select: { referredById: true }
@@ -134,7 +169,7 @@ export async function PATCH(
                 pickupId: pickup.id,
                 userId: customer.referredById,
                 type: 'AFFILIATE',
-                amount: pickup.affiliateFee,
+                amount: actualAffiliateFee,
                 status: 'PENDING'
               }
             });
@@ -151,9 +186,27 @@ export async function PATCH(
             relatedId: pickup.id
           }
         });
-      } else if (status === 'CANCELLED' && (user.role === 'CUSTOMER' || user.role === 'ADMIN')) {
-        updateData = { status: 'CANCELLED' };
       }
+      // Warehouse can also mark as completed (legacy support)
+      else if (status === 'COMPLETED' && user.role === 'WAREHOUSE') {
+        updateData = {
+          ...updateData,
+          status: 'COMPLETED',
+          warehouseId: user.id
+        };
+      }
+      // Cancellation
+      else if (status === 'CANCELLED' && (user.role === 'CUSTOMER' || user.role === 'ADMIN')) {
+        updateData = { ...updateData, status: 'CANCELLED' };
+      }
+    }
+
+    // Check if there's anything to update
+    if (Object.keys(updateData).length === 0) {
+      return NextResponse.json(
+        { message: 'No valid updates provided' },
+        { status: 400 }
+      );
     }
 
     const updatedPickup = await prisma.pickup.update({
@@ -167,10 +220,15 @@ export async function PATCH(
     });
 
     return NextResponse.json(updatedPickup);
-  } catch (error) {
+  } catch (error: any) {
     console.error('Update pickup error:', error);
+    console.error('Error details:', error.message, error.stack);
     return NextResponse.json(
-      { message: 'Internal server error' },
+      {
+        message: 'Internal server error',
+        error: error.message || 'Unknown error',
+        details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+      },
       { status: 500 }
     );
   }

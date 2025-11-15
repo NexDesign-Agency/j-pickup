@@ -46,17 +46,19 @@ model Pickup {
   status           String   @default("PENDING") // PENDING, ASSIGNED, IN_PROGRESS, COMPLETED, CANCELLED
   scheduledDate    DateTime
   actualDate       DateTime?
-  volume           Float    // in liters
+  volume           Float    // in liters (estimated)
+  actualVolume     Float?   // actual liters collected at location
   pricePerLiter    Float
   totalPrice       Float
   courierFee       Float    @default(0)
   affiliateFee     Float    @default(0)
   notes            String?
+  photoProof       String?  // URL/path to pickup photo proof
   latitude         Float?
   longitude        Float?
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
-  
+
   customer         User     @relation("CustomerPickups", fields: [customerId], references: [id])
   courier          User?    @relation("CourierPickups", fields: [courierId], references: [id])
   warehouse        User?    @relation("WarehousePickups", fields: [warehouseId], references: [id])

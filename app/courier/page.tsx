@@ -31,35 +31,18 @@ export default function CourierDashboard() {
     completedTotal: 0
   })
 
-  const [assignedPickups, setAssignedPickups] = useState([
-    {
-      id: '1',
-      customerName: 'Budi Santoso',
-      address: 'Jl. Kebon Jeruk No. 12, Jakarta Barat',
-      volume: 25,
-      scheduledDate: '2024-01-15T10:00:00',
-      status: 'ASSIGNED',
-      phone: '081234567890',
-      latitude: -6.200000,
-      longitude: 106.816666
-    },
-    {
-      id: '2',
-      customerName: 'Siti Aminah',
-      address: 'Jl. Melati No. 45, Jakarta Selatan',
-      volume: 30,
-      scheduledDate: '2024-01-15T14:00:00',
-      status: 'IN_PROGRESS',
-      phone: '081234567891',
-      latitude: -6.200000,
-      longitude: 106.816666
-    }
-  ])
+  const [assignedPickups, setAssignedPickups] = useState<any[]>([])
+  const [showUploadModal, setShowUploadModal] = useState(false)
+  const [selectedPickup, setSelectedPickup] = useState<any>(null)
+  const [uploadData, setUploadData] = useState({
+    photoProof: '',
+    actualVolume: ''
+  })
 
   useEffect(() => {
     const token = localStorage.getItem('token')
     const userData = JSON.parse(localStorage.getItem('user') || '{}')
-    
+
     if (!token) {
       router.push('/login')
       return
@@ -72,6 +55,7 @@ export default function CourierDashboard() {
 
     setUser(userData)
     fetchCourierStats(token)
+    fetchAssignedPickups(token)
   }, [])
 
   const fetchCourierStats = async (token: string) => {
@@ -80,7 +64,7 @@ export default function CourierDashboard() {
         headers: { 'Authorization': `Bearer ${token}` }
       })
       const data = await res.json()
-      
+
       setStats({
         todayPickups: data.todayPickups || 0,
         completedToday: data.completedToday || 0,
@@ -91,6 +75,34 @@ export default function CourierDashboard() {
       })
     } catch (error) {
       console.error('Error fetching stats:', error)
+    }
+  }
+
+  const fetchAssignedPickups = async (token: string) => {
+    try {
+      const res = await fetch('/api/pickups', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+      const data = await res.json()
+
+      // Transform the data to match the expected format
+      const transformedPickups = data.map((pickup: any) => ({
+        id: pickup.id,
+        customerName: pickup.customer?.name || 'Unknown',
+        address: pickup.customer?.address || 'No address',
+        volume: pickup.volume,
+        actualVolume: pickup.actualVolume,
+        photoProof: pickup.photoProof,
+        scheduledDate: pickup.scheduledDate,
+        status: pickup.status,
+        phone: pickup.customer?.phone || '',
+        latitude: pickup.latitude || -6.200000,
+        longitude: pickup.longitude || 106.816666
+      }))
+
+      setAssignedPickups(transformedPickups)
+    } catch (error) {
+      console.error('Error fetching pickups:', error)
     }
   }
 
@@ -123,7 +135,15 @@ export default function CourierDashboard() {
 
       if (res.ok) {
         alert('Status berhasil diupdate!')
-        fetchCourierStats(localStorage.getItem('token')!)
+        // Refresh both stats and pickups
+        const currentToken = localStorage.getItem('token')
+        if (currentToken) {
+          fetchCourierStats(currentToken)
+          fetchAssignedPickups(currentToken)
+        }
+      } else {
+        const errorData = await res.json()
+        alert(`Gagal update status: ${errorData.message || 'Unknown error'}`)
       }
     } catch (error) {
       console.error('Error updating status:', error)
@@ -131,8 +151,67 @@ export default function CourierDashboard() {
     }
   }
 
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setUploadData(prev => ({ ...prev, photoProof: reader.result as string }))
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
+  const handleUploadSubmit = async () => {
+    if (!selectedPickup || !uploadData.photoProof || !uploadData.actualVolume) {
+      alert('Harap upload foto dan masukkan volume aktual')
+      return
+    }
+
+    try {
+      const token = localStorage.getItem('token')
+      const res = await fetch(`/api/pickups/${selectedPickup.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          photoProof: uploadData.photoProof,
+          actualVolume: uploadData.actualVolume
+        })
+      })
+
+      if (res.ok) {
+        alert('Data berhasil diupdate!')
+        setShowUploadModal(false)
+        setUploadData({ photoProof: '', actualVolume: '' })
+        const currentToken = localStorage.getItem('token')
+        if (currentToken) {
+          fetchAssignedPickups(currentToken)
+        }
+      } else {
+        const errorData = await res.json()
+        alert(`Gagal update data: ${errorData.message || 'Unknown error'}`)
+      }
+    } catch (error) {
+      console.error('Error updating pickup data:', error)
+      alert('Gagal update data')
+    }
+  }
+
+  const openUploadModal = (pickup: any) => {
+    setSelectedPickup(pickup)
+    setUploadData({
+      photoProof: pickup.photoProof || '',
+      actualVolume: pickup.actualVolume || ''
+    })
+    setShowUploadModal(true)
+  }
+
   const getStatusColor = (status: string) => {
     switch(status) {
+      case 'PENDING': return 'bg-yellow-100 text-yellow-800'
       case 'ASSIGNED': return 'bg-blue-100 text-blue-800'
       case 'IN_PROGRESS': return 'bg-orange-100 text-orange-800'
       case 'COMPLETED': return 'bg-green-100 text-green-800'
@@ -276,22 +355,59 @@ export default function CourierDashboard() {
                     </button>
                   </div>
 
+                  {pickup.status === 'PENDING' && (
+                    <button
+                      onClick={() => updatePickupStatus(pickup.id, 'ASSIGNED')}
+                      className="w-full mt-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+                    >
+                      Terima Pickup
+                    </button>
+                  )}
+
                   {pickup.status === 'ASSIGNED' && (
                     <button
-                      onClick={() => updatePickupStatus(pickup.id, 'IN_PROGRESS')}
+                      onClick={async () => {
+                        await updatePickupStatus(pickup.id, 'IN_PROGRESS')
+                        // Refresh and open modal
+                        setTimeout(() => {
+                          const updatedPickup = assignedPickups.find(p => p.id === pickup.id)
+                          if (updatedPickup) {
+                            openUploadModal({ ...pickup, status: 'IN_PROGRESS' })
+                          }
+                        }, 500)
+                      }}
                       className="w-full mt-2 bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition-colors text-sm font-medium"
                     >
                       Mulai Pickup
                     </button>
                   )}
-                  
+
                   {pickup.status === 'IN_PROGRESS' && (
-                    <button
-                      onClick={() => updatePickupStatus(pickup.id, 'COMPLETED')}
-                      className="w-full mt-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
-                    >
-                      ✓ Selesaikan Pickup
-                    </button>
+                    <>
+                      {pickup.photoProof && pickup.actualVolume && (
+                        <div className="mt-2 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                          <div className="text-xs text-blue-800 mb-1">Data Pickup:</div>
+                          <div className="text-sm font-semibold text-blue-900">Volume Aktual: {pickup.actualVolume}L</div>
+                          <div className="text-xs text-blue-600">Foto bukti tersimpan ✓</div>
+                        </div>
+                      )}
+
+                      <button
+                        onClick={() => openUploadModal(pickup)}
+                        className="w-full mt-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+                      >
+                        {pickup.photoProof && pickup.actualVolume ? 'Edit Data Pickup' : 'Upload Foto & Volume'}
+                      </button>
+
+                      {pickup.photoProof && pickup.actualVolume && (
+                        <button
+                          onClick={() => updatePickupStatus(pickup.id, 'COMPLETED')}
+                          className="w-full mt-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
+                        >
+                          ✓ Selesaikan Pickup
+                        </button>
+                      )}
+                    </>
                   )}
                 </div>
               ))}
@@ -374,6 +490,87 @@ export default function CourierDashboard() {
           </div>
         </div>
       </div>
+
+      {/* Upload Modal */}
+      {showUploadModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl p-6 max-w-md w-full max-h-[90vh] overflow-y-auto">
+            <h3 className="text-xl font-bold text-gray-900 mb-4">Upload Bukti Pickup</h3>
+
+            <div className="space-y-4">
+              {/* Photo Upload */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Foto Bukti Pickup *
+                </label>
+                {uploadData.photoProof ? (
+                  <div className="relative">
+                    <img
+                      src={uploadData.photoProof}
+                      alt="Preview"
+                      className="w-full h-48 object-cover rounded-lg border-2 border-gray-200"
+                    />
+                    <button
+                      onClick={() => setUploadData(prev => ({ ...prev, photoProof: '' }))}
+                      className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-2 hover:bg-red-600"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ) : (
+                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileUpload}
+                      className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* Volume Input */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Volume Aktual (Liter) *
+                </label>
+                <input
+                  type="number"
+                  step="0.1"
+                  value={uploadData.actualVolume}
+                  onChange={(e) => setUploadData(prev => ({ ...prev, actualVolume: e.target.value }))}
+                  placeholder="Masukkan volume aktual"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+                {selectedPickup && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    Estimasi awal: {selectedPickup.volume}L
+                  </p>
+                )}
+              </div>
+
+              {/* Buttons */}
+              <div className="flex gap-3 mt-6">
+                <button
+                  onClick={() => {
+                    setShowUploadModal(false)
+                    setUploadData({ photoProof: '', actualVolume: '' })
+                  }}
+                  className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium"
+                >
+                  Batal
+                </button>
+                <button
+                  onClick={handleUploadSubmit}
+                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                >
+                  Simpan
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Bottom Navigation Bar - Mobile */}
       <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg md:hidden z-50">
