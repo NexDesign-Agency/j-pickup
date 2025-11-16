@@ -1,5 +1,5 @@
 {
-  "buildCommand": "npm run build",
+  "buildCommand": "npx prisma migrate deploy && npm run db:seed && npm run build",
   "installCommand": "npm install --force && npx prisma generate",
   "framework": "nextjs",
   "build": {
