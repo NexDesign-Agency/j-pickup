@@ -26,7 +26,14 @@ export default function AdminNewPickupPage() {
     name: '',
     phone: '',
     email: '',
-    address: ''
+    address: '',
+    kota: '',
+    kelurahan: '',
+    kecamatan: '',
+    latitude: '',
+    longitude: '',
+    shareLocationUrl: '',
+    referralCode: ''
   })
   const [tempPassword, setTempPassword] = useState<string | null>(null)
 
@@ -127,7 +134,19 @@ export default function AdminNewPickupPage() {
                     type="button"
                     onClick={() => {
                       setShowRegister(true)
-                      setRegisterForm({ ...registerForm, phone: search })
+                      setRegisterForm({
+                        name: '',
+                        phone: search,
+                        email: '',
+                        address: '',
+                        kota: '',
+                        kelurahan: '',
+                        kecamatan: '',
+                        latitude: '',
+                        longitude: '',
+                        shareLocationUrl: '',
+                        referralCode: ''
+                      })
                     }}
                     className="text-green-600 underline ml-1"
                   >
@@ -144,69 +163,266 @@ export default function AdminNewPickupPage() {
 
             {showRegister && (
               <div className="mt-4 border-t pt-4">
-                <h3 className="text-sm font-semibold mb-2">Register New Customer</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <input
-                    type="text"
-                    placeholder="Name"
-                    value={registerForm.name}
-                    onChange={(e) => setRegisterForm({ ...registerForm, name: e.target.value })}
-                    className="w-full px-3 py-2 border rounded-md"
-                  />
-                  <input
-                    type="tel"
-                    placeholder="Phone"
-                    value={registerForm.phone}
-                    onChange={(e) => setRegisterForm({ ...registerForm, phone: e.target.value })}
-                    className="w-full px-3 py-2 border rounded-md"
-                  />
-                  <input
-                    type="email"
-                    placeholder="Email"
-                    value={registerForm.email}
-                    onChange={(e) => setRegisterForm({ ...registerForm, email: e.target.value })}
-                    className="w-full px-3 py-2 border rounded-md"
-                  />
-                  <input
-                    type="text"
-                    placeholder="Address (optional)"
-                    value={registerForm.address}
-                    onChange={(e) => setRegisterForm({ ...registerForm, address: e.target.value })}
-                    className="w-full px-3 py-2 border rounded-md"
-                  />
-                </div>
-                <div className="flex gap-3 mt-3">
-                  <button
-                    type="button"
-                    onClick={async () => {
-                      try {
-                        const token = localStorage.getItem('token')
-                        // Generate a temporary password (e.g., phone + '123') or any policy you prefer
-                        const generatedPassword = (registerForm.phone || 'User') + '123'
-                        setTempPassword(generatedPassword)
-                        const res = await axios.post('/api/auth/register', {
-                          email: registerForm.email,
-                          password: generatedPassword,
-                          name: registerForm.name,
-                          phone: registerForm.phone,
-                          address: registerForm.address
-                        })
-                        const newUser = res.data.user
-                        toast.success('Customer registered')
-                        setSelectedUser({ id: newUser.id, name: newUser.name, email: newUser.email })
+                <h3 className="text-sm font-semibold mb-4">Register New Customer</h3>
+                <div className="space-y-4">
+                  {/* Basic Info */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-medium text-gray-700 mb-1">Name <span className="text-red-500">*</span></label>
+                      <input
+                        type="text"
+                        placeholder="Nama lengkap"
+                        value={registerForm.name}
+                        onChange={(e) => setRegisterForm({ ...registerForm, name: e.target.value })}
+                        className="w-full px-3 py-2 border rounded-md text-sm"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-700 mb-1">No. Handphone <span className="text-red-500">*</span></label>
+                      <input
+                        type="tel"
+                        placeholder="08123456789"
+                        value={registerForm.phone}
+                        onChange={(e) => setRegisterForm({ ...registerForm, phone: e.target.value })}
+                        className="w-full px-3 py-2 border rounded-md text-sm"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-700 mb-1">Email <span className="text-gray-400">(Opsional)</span></label>
+                      <input
+                        type="email"
+                        placeholder="email@example.com"
+                        value={registerForm.email}
+                        onChange={(e) => setRegisterForm({ ...registerForm, email: e.target.value })}
+                        className="w-full px-3 py-2 border rounded-md text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-700 mb-1">Kota <span className="text-red-500">*</span></label>
+                      <input
+                        type="text"
+                        placeholder="Jakarta, Surabaya, dll"
+                        value={registerForm.kota}
+                        onChange={(e) => setRegisterForm({ ...registerForm, kota: e.target.value })}
+                        className="w-full px-3 py-2 border rounded-md text-sm"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  {/* Address Details */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-xs font-medium text-gray-700 mb-1">Kelurahan <span className="text-gray-400">(Opsional)</span></label>
+                      <input
+                        type="text"
+                        placeholder="Kelurahan"
+                        value={registerForm.kelurahan}
+                        onChange={(e) => setRegisterForm({ ...registerForm, kelurahan: e.target.value })}
+                        className="w-full px-3 py-2 border rounded-md text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-700 mb-1">Kecamatan <span className="text-gray-400">(Opsional)</span></label>
+                      <input
+                        type="text"
+                        placeholder="Kecamatan"
+                        value={registerForm.kecamatan}
+                        onChange={(e) => setRegisterForm({ ...registerForm, kecamatan: e.target.value })}
+                        className="w-full px-3 py-2 border rounded-md text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-700 mb-1">Referred By <span className="text-gray-400">(Opsional)</span></label>
+                      <input
+                        type="text"
+                        placeholder="Kode referral"
+                        value={registerForm.referralCode}
+                        onChange={(e) => setRegisterForm({ ...registerForm, referralCode: e.target.value })}
+                        className="w-full px-3 py-2 border rounded-md text-sm"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Full Address */}
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">Alamat Lengkap <span className="text-red-500">*</span></label>
+                    <textarea
+                      placeholder="Jl. Contoh No. 123, RT/RW, Detail lokasi..."
+                      value={registerForm.address}
+                      onChange={(e) => setRegisterForm({ ...registerForm, address: e.target.value })}
+                      className="w-full px-3 py-2 border rounded-md text-sm"
+                      rows={2}
+                      required
+                    />
+                  </div>
+
+                  {/* Share Location - Required */}
+                  <div className="border-2 border-green-200 rounded-lg p-3 bg-green-50">
+                    <label className="block text-xs font-medium text-gray-700 mb-2">Share Lokasi <span className="text-red-500">*</span></label>
+                    <p className="text-xs text-gray-600 mb-3">Diperlukan agar kurir dapat menemukan lokasi Anda dengan mudah</p>
+
+                    <div className="grid grid-cols-2 gap-3 mb-3">
+                      <div>
+                        <label className="block text-xs text-gray-600 mb-1">Latitude</label>
+                        <input
+                          type="number"
+                          step="any"
+                          placeholder="-6.2088"
+                          value={registerForm.latitude}
+                          onChange={(e) => setRegisterForm({ ...registerForm, latitude: e.target.value })}
+                          className="w-full px-3 py-2 border rounded-md text-sm"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs text-gray-600 mb-1">Longitude</label>
+                        <input
+                          type="number"
+                          step="any"
+                          placeholder="106.8456"
+                          value={registerForm.longitude}
+                          onChange={(e) => setRegisterForm({ ...registerForm, longitude: e.target.value })}
+                          className="w-full px-3 py-2 border rounded-md text-sm"
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (navigator.geolocation) {
+                          navigator.geolocation.getCurrentPosition(
+                            (position) => {
+                              setRegisterForm(prev => ({
+                                ...prev,
+                                latitude: position.coords.latitude.toString(),
+                                longitude: position.coords.longitude.toString(),
+                                shareLocationUrl: `https://www.google.com/maps?q=${position.coords.latitude},${position.coords.longitude}`
+                              }))
+                              toast.success('Lokasi berhasil didapatkan!')
+                            },
+                            (error) => {
+                              toast.error('Gagal mendapatkan lokasi: ' + error.message)
+                            }
+                          )
+                        } else {
+                          toast.error('Browser tidak mendukung geolocation')
+                        }
+                      }}
+                      className="w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 text-sm"
+                    >
+                      Ambil Lokasi Saya
+                    </button>
+
+                    {registerForm.latitude && registerForm.longitude && (
+                      <div className="mt-2 p-2 bg-white rounded border text-xs">
+                        <div>Koordinat: {registerForm.latitude}, {registerForm.longitude}</div>
+                        {registerForm.shareLocationUrl && (
+                          <a
+                            href={registerForm.shareLocationUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-600 hover:text-blue-800 underline"
+                          >
+                            Lihat di Google Maps →
+                          </a>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex gap-3 pt-2">
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        // Validation
+                        if (!registerForm.name.trim() || !registerForm.phone.trim() || !registerForm.address.trim() || !registerForm.kota.trim()) {
+                          toast.error('Nama, No HP, Alamat, dan Kota wajib diisi')
+                          return
+                        }
+                        if (!registerForm.latitude || !registerForm.longitude) {
+                          toast.error('Share Lokasi wajib diisi')
+                          return
+                        }
+
+                        try {
+                          const token = localStorage.getItem('token')
+                          const generatedPassword = (registerForm.phone || 'User') + '123'
+                          setTempPassword(generatedPassword)
+
+                          const res = await axios.post('/api/auth/register', {
+                            email: registerForm.email || undefined,
+                            password: generatedPassword,
+                            name: registerForm.name.trim(),
+                            phone: registerForm.phone.trim(),
+                            address: registerForm.address.trim(),
+                            kelurahan: registerForm.kelurahan.trim() || undefined,
+                            kecamatan: registerForm.kecamatan.trim() || undefined,
+                            kota: registerForm.kota.trim(),
+                            latitude: parseFloat(registerForm.latitude),
+                            longitude: parseFloat(registerForm.longitude),
+                            shareLocationUrl: registerForm.shareLocationUrl || undefined,
+                            referralCode: registerForm.referralCode.trim() || undefined
+                          })
+
+                          const newUser = res.data.user
+                          toast.success('Customer berhasil didaftarkan')
+                          setSelectedUser({ id: newUser.id, name: newUser.name, email: newUser.email })
+                          setShowRegister(false)
+                          setRegisterForm({
+                            name: '',
+                            phone: '',
+                            email: '',
+                            address: '',
+                            kota: '',
+                            kelurahan: '',
+                            kecamatan: '',
+                            latitude: '',
+                            longitude: '',
+                            shareLocationUrl: '',
+                            referralCode: ''
+                          })
+                        } catch (err: any) {
+                          toast.error(err.response?.data?.message || 'Gagal mendaftarkan customer')
+                        }
+                      }}
+                      className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 text-sm"
+                    >
+                      Save & Use This Customer
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
                         setShowRegister(false)
-                      } catch (err: any) {
-                        toast.error(err.response?.data?.message || 'Failed to register customer')
-                      }
-                    }}
-                    className="bg-green-600 text-white px-3 py-2 rounded"
-                  >
-                    Save & Use This Customer
-                  </button>
-                  <button type="button" onClick={() => setShowRegister(false)} className="px-3 py-2 border rounded">Cancel</button>
-                  {tempPassword && (
-                    <div className="text-xs text-gray-500 self-center">Temporary password: {tempPassword}</div>
-                  )}
+                        setRegisterForm({
+                          name: '',
+                          phone: '',
+                          email: '',
+                          address: '',
+                          kota: '',
+                          kelurahan: '',
+                          kecamatan: '',
+                          latitude: '',
+                          longitude: '',
+                          shareLocationUrl: '',
+                          referralCode: ''
+                        })
+                      }}
+                      className="px-4 py-2 border rounded text-sm"
+                    >
+                      Cancel
+                    </button>
+                    {tempPassword && (
+                      <div className="text-xs text-gray-500 self-center ml-2">
+                        Password sementara: <span className="font-medium">{tempPassword}</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             )}
