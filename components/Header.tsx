@@ -77,6 +77,11 @@ export default function Header() {
                   Commissions
                 </Link>
               )}
+              {user.role === 'ADMIN' && (
+                <Link href="/admin/pembukuan" className="text-gray-700 hover:text-green-600 px-3 py-2 rounded-md text-sm font-medium">
+                  Pembukuan
+                </Link>
+              )}
               <Link href="/profile" className="text-gray-700 hover:text-green-600 px-3 py-2 rounded-md text-sm font-medium">
                 Profile
               </Link>
@@ -187,16 +192,25 @@ export default function Header() {
                 </Link>
               )}
               {user.role === 'COURIER' && (
-                <Link 
-                  href="/commissions" 
+                <Link
+                  href="/commissions"
                   className="text-gray-700 hover:text-green-600 hover:bg-gray-50 block px-3 py-2 rounded-md text-base font-medium"
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   Commissions
                 </Link>
               )}
-              <Link 
-                href="/profile" 
+              {user.role === 'ADMIN' && (
+                <Link
+                  href="/admin/pembukuan"
+                  className="text-gray-700 hover:text-green-600 hover:bg-gray-50 block px-3 py-2 rounded-md text-base font-medium"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Pembukuan
+                </Link>
+              )}
+              <Link
+                href="/profile"
                 className="text-gray-700 hover:text-green-600 hover:bg-gray-50 block px-3 py-2 rounded-md text-base font-medium"
                 onClick={() => setMobileMenuOpen(false)}
               >

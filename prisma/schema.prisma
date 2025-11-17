@@ -139,7 +139,7 @@ model Notification {
 model Settings {
   id                    String   @id @default(uuid())
 
-  // Pricing Settings (Tiered)
+  // Pricing Settings (Tiered) - Harga Beli dari Customer
   priceTier1Min         Float    @default(1)      // 1 liter
   priceTier1Max         Float    @default(99)     // 99 liters
   priceTier1Rate        Float    @default(6500)   // Rp 6500/liter
@@ -150,6 +150,9 @@ model Settings {
 
   priceTier3Min         Float    @default(200)    // 200+ liters
   priceTier3Rate        Float    @default(7500)   // Rp 7500/liter
+
+  // Selling Price - Harga Jual ke Pabrik/Pembeli
+  sellingPricePerLiter  Float    @default(8000)   // Rp 8000/liter
 
   // Courier Commission
   courierCommissionPerLiter Float @default(500)   // Rp 500/liter
@@ -177,4 +180,13 @@ model Settings {
 
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
+}
+
+model OtherExpense {
+  id          String   @id @default(uuid())
+  description String   // Keterangan pengeluaran
+  amount      Float    // Nominal pengeluaran
+  date        DateTime @default(now()) // Tanggal pengeluaran
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }

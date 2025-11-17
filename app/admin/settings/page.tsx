@@ -23,6 +23,9 @@ export default function AdminSettingsPage() {
     priceTier3Min: 200,
     priceTier3Rate: 7500,
 
+    // Selling Price
+    sellingPricePerLiter: 8000,
+
     // Courier Commission
     courierCommissionPerLiter: 500,
     courierDailySalary: 50000,
@@ -264,6 +267,23 @@ export default function AdminSettingsPage() {
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg"
                         />
                       </div>
+                    </div>
+                  </div>
+
+                  {/* Selling Price */}
+                  <div className="bg-yellow-50 border-2 border-yellow-300 rounded-lg p-4 mb-6">
+                    <h3 className="font-semibold text-yellow-900 mb-3">Harga Jual ke Pabrik/Pembeli</h3>
+                    <div className="max-w-md">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Harga Jual per Liter (Rp)</label>
+                      <input
+                        type="number"
+                        value={settings.sellingPricePerLiter}
+                        onChange={(e) => handleChange('sellingPricePerLiter', parseFloat(e.target.value))}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                      />
+                      <p className="text-xs text-gray-600 mt-1">
+                        Harga jual minyak jelantah ke pabrik/pembeli per liter
+                      </p>
                     </div>
                   </div>
                 </div>
