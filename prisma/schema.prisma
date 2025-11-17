@@ -161,6 +161,9 @@ model Settings {
   // Affiliate Commission
   affiliateCommissionPerLiter Float @default(200) // Rp 200/liter
 
+  // Investor Fee
+  investorFeePerLiter       Float @default(500)   // Rp 500/liter
+
   // System Settings
   appName               String   @default("JelantahGO")
   contactPhone          String   @default("")

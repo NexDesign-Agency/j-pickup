@@ -33,6 +33,9 @@ export default function AdminSettingsPage() {
     // Affiliate Commission
     affiliateCommissionPerLiter: 200,
 
+    // Investor Fee
+    investorFeePerLiter: 500,
+
     // System Settings
     appName: 'JelantahGO',
     contactPhone: '',
@@ -330,6 +333,27 @@ export default function AdminSettingsPage() {
                         />
                         <p className="text-xs text-gray-500 mt-1">Dari downline yang direferensikan</p>
                       </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Investor Fee */}
+                <div className="mt-6">
+                  <h2 className="text-xl font-semibold text-gray-900 mb-4">Fee Investor</h2>
+
+                  <div className="bg-indigo-50 rounded-lg p-4 max-w-md">
+                    <h3 className="font-semibold text-indigo-900 mb-3">Fee untuk Investor</h3>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Per Liter (Rp)</label>
+                      <input
+                        type="number"
+                        value={settings.investorFeePerLiter}
+                        onChange={(e) => handleChange('investorFeePerLiter', parseFloat(e.target.value))}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">
+                        Fee yang dibayarkan ke investor per liter jelantah
+                      </p>
                     </div>
                   </div>
                 </div>

@@ -62,6 +62,7 @@ export default function AdminPembukuanPage() {
   const [commissions, setCommissions] = useState<Commission[]>([])
   const [otherExpenses, setOtherExpenses] = useState<OtherExpense[]>([])
   const [sellingPricePerLiter, setSellingPricePerLiter] = useState(8000)
+  const [investorFeePerLiter, setInvestorFeePerLiter] = useState(500)
 
   const [periodFilter, setPeriodFilter] = useState('thisMonth')
   const [startDate, setStartDate] = useState('')
@@ -141,13 +142,14 @@ export default function AdminPembukuanPage() {
         setOtherExpenses(data)
       }
 
-      // Fetch selling price from settings
+      // Fetch selling price and investor fee from settings
       const settingsRes = await fetch('/api/settings', {
         headers: { 'Authorization': `Bearer ${token}` }
       })
       if (settingsRes.ok) {
         const data = await settingsRes.json()
         setSellingPricePerLiter(data.sellingPricePerLiter || 8000)
+        setInvestorFeePerLiter(data.investorFeePerLiter || 500)
       }
 
     } catch (error) {
@@ -223,10 +225,17 @@ export default function AdminPembukuanPage() {
     return sum + (volume * sellingPricePerLiter)
   }, 0)
 
+  // Calculate total volume for investor fee
+  const totalVolume = pickups.reduce((sum, p) => {
+    const volume = p.actualVolume || p.volume
+    return sum + volume
+  }, 0)
+
   const totalCustomerPayments = bills.reduce((sum, b) => sum + b.amount, 0)
   const totalCommissions = commissions.reduce((sum, c) => sum + c.amount, 0)
+  const totalInvestorFee = totalVolume * investorFeePerLiter
   const totalOtherExpenses = otherExpenses.reduce((sum, e) => sum + e.amount, 0)
-  const totalExpenses = totalCustomerPayments + totalCommissions + totalOtherExpenses
+  const totalExpenses = totalCustomerPayments + totalCommissions + totalInvestorFee + totalOtherExpenses
   const netProfit = totalRevenue - totalExpenses
 
   if (loading) {
@@ -309,6 +318,7 @@ export default function AdminPembukuanPage() {
             <div className="text-red-100 text-sm mt-2 space-y-1">
               <div>Pembayaran Customer: Rp {totalCustomerPayments.toLocaleString('id-ID')}</div>
               <div>Komisi: Rp {totalCommissions.toLocaleString('id-ID')}</div>
+              <div>Fee Investor ({totalVolume.toFixed(1)}L): Rp {totalInvestorFee.toLocaleString('id-ID')}</div>
               <div>Lain-lain: Rp {totalOtherExpenses.toLocaleString('id-ID')}</div>
             </div>
           </div>
