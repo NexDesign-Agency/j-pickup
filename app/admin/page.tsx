@@ -117,7 +117,7 @@ export default function AdminPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20 md:pb-6">
+    <div className="min-h-screen bg-gray-50 pb-6">
       <Header />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-8">
@@ -269,42 +269,7 @@ export default function AdminPage() {
         </div>
       </main>
 
-      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg md:hidden z-50">
-        <div className="grid h-16" style={{ gridTemplateColumns: `repeat(${getBottomNavItems().length}, 1fr)` }}>
-          {getBottomNavItems().map((item) => {
-            const Icon = item.icon
-            const isActive = activeTab === item.id
-            
-            return (
-              <Link
-                key={item.id}
-                href={item.href}
-                onClick={() => setActiveTab(item.id)}
-                className={`relative flex flex-col items-center justify-center space-y-1 transition-colors ${
-                  isActive 
-                    ? 'text-green-600' 
-                    : 'text-gray-400 hover:text-gray-600'
-                }`}
-              >
-                <div className="relative">
-                  <Icon className={`w-6 h-6 ${isActive ? 'scale-110' : ''} transition-transform`} />
-                  {item.badge !== null && item.badge !== undefined && item.badge > 0 && (
-                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full w-4 h-4 flex items-center justify-center">
-                      {item.badge}
-                    </span>
-                  )}
-                </div>
-                <span className={`text-xs font-medium ${isActive ? 'font-semibold' : ''}`}>
-                  {item.label}
-                </span>
-                {isActive && (
-                  <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-12 h-1 bg-green-600 rounded-b-full"></div>
-                )}
-              </Link>
-            )
-          })}
-        </div>
-      </nav>
+      
     </div>
   )
 }

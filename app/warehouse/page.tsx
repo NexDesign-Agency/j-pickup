@@ -167,7 +167,7 @@ export default function WarehouseDashboard() {
   ]
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20 md:pb-6">
+    <div className="min-h-screen bg-gray-50 pb-6">
       {/* Header */}
       <header className="bg-gradient-to-r from-purple-600 to-purple-700 shadow-lg sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
@@ -403,42 +403,7 @@ export default function WarehouseDashboard() {
       </div>
 
       {/* Bottom Navigation Bar - Mobile */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg md:hidden z-50">
-        <div className="grid grid-cols-4 h-16">
-          {bottomNavItems.map((item) => {
-            const Icon = item.icon
-            const isActive = activeTab === item.id
-            
-            return (
-              <button
-                key={item.id}
-                onClick={() => {
-                  setActiveTab(item.id)
-                  if (item.path) {
-                    router.push(item.path)
-                  }
-                }}
-                className={`relative flex flex-col items-center justify-center space-y-1 transition-colors ${
-                  isActive ? 'text-purple-600' : 'text-gray-400'
-                }`}
-              >
-                <div className="relative">
-                  <Icon className="w-6 h-6" />
-                  {item.badge && item.badge > 0 && (
-                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full w-4 h-4 flex items-center justify-center">
-                      {item.badge}
-                    </span>
-                  )}
-                </div>
-                <span className="text-xs font-medium">{item.label}</span>
-                {isActive && (
-                  <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-12 h-1 bg-purple-600 rounded-b-full"></div>
-                )}
-              </button>
-            )
-          })}
-        </div>
-      </nav>
+      
     </div>
   )
 }
