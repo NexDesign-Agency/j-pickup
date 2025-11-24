@@ -63,7 +63,6 @@ export async function POST(request: Request) {
         );
       }
     }
-    }
 
     // ====== NORMALIZE EMAIL ======
     // Email opsional, jika tidak diisi generate otomatis
