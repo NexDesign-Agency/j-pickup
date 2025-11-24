@@ -82,7 +82,7 @@ export default function AdminPembukuanPage() {
     const user = JSON.parse(localStorage.getItem('user') || '{}')
 
     if (!token) return router.push('/login')
-    if (user?.role !== 'ADMIN') return router.push('/dashboard')
+    if (user?.role !== 'ADMIN' && user?.role !== 'WAREHOUSE') return router.push('/dashboard')
 
     // Set default date range (this month)
     const now = new Date()

@@ -351,7 +351,6 @@ export default function AdminNewPickupPage() {
                           value={registerForm.latitude}
                           onChange={(e) => setRegisterForm({ ...registerForm, latitude: e.target.value })}
                           className="w-full px-3 py-2 border rounded-md text-sm"
-                          required
                         />
                       </div>
                       <div>
@@ -363,7 +362,6 @@ export default function AdminNewPickupPage() {
                           value={registerForm.longitude}
                           onChange={(e) => setRegisterForm({ ...registerForm, longitude: e.target.value })}
                           className="w-full px-3 py-2 border rounded-md text-sm"
-                          required
                         />
                       </div>
                     </div>
@@ -423,8 +421,8 @@ export default function AdminNewPickupPage() {
                           toast.error('Nama, No HP, Alamat, dan Kota wajib diisi')
                           return
                         }
-                        if (!registerForm.latitude || !registerForm.longitude) {
-                          toast.error('Share Lokasi wajib diisi')
+                        if ((!registerForm.latitude || !registerForm.longitude) && !registerForm.shareLocationUrl.trim()) {
+                          toast.error('Share Lokasi wajib diisi (paste link atau isi koordinat)')
                           return
                         }
 
@@ -442,8 +440,8 @@ export default function AdminNewPickupPage() {
                             kelurahan: registerForm.kelurahan.trim() || undefined,
                             kecamatan: registerForm.kecamatan.trim() || undefined,
                             kota: registerForm.kota.trim(),
-                            latitude: parseFloat(registerForm.latitude),
-                            longitude: parseFloat(registerForm.longitude),
+                            latitude: registerForm.latitude ? parseFloat(registerForm.latitude) : undefined,
+                            longitude: registerForm.longitude ? parseFloat(registerForm.longitude) : undefined,
                             shareLocationUrl: registerForm.shareLocationUrl || undefined,
                             referralCode: registerForm.referralCode.trim() || undefined
                           })

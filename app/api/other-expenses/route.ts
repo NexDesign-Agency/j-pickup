@@ -8,7 +8,7 @@ export async function GET(request: NextRequest) {
     const user = await verifyAuth(request);
     if (!user) return unauthorizedResponse();
 
-    if (user.role !== 'ADMIN') {
+    if (user.role !== 'ADMIN' && user.role !== 'WAREHOUSE') {
       return forbiddenResponse();
     }
 
