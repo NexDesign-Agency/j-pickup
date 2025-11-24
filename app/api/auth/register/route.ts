@@ -36,24 +36,33 @@ export async function POST(request: Request) {
       );
     }
 
-    // Validasi latitude & longitude (Share Lokasi WAJIB)
-    if (latitude === undefined || longitude === undefined || 
-        latitude === null || longitude === null) {
+    // Validasi Share Lokasi: harus ada coordinates ATAU shareLocationUrl
+    const hasCoordinates = latitude !== undefined && latitude !== null &&
+                          longitude !== undefined && longitude !== null;
+    const hasShareUrl = shareLocationUrl && shareLocationUrl.trim();
+
+    if (!hasCoordinates && !hasShareUrl) {
       return NextResponse.json(
-        { message: 'Share Lokasi wajib diisi (latitude & longitude)' },
+        { message: 'Share Lokasi wajib diisi (paste link Google Maps atau isi koordinat)' },
         { status: 400 }
       );
     }
 
-    // Validasi format latitude & longitude
-    const lat = parseFloat(latitude);
-    const lng = parseFloat(longitude);
-    
-    if (isNaN(lat) || isNaN(lng) || lat < -90 || lat > 90 || lng < -180 || lng > 180) {
-      return NextResponse.json(
-        { message: 'Format Share Lokasi tidak valid' },
-        { status: 400 }
-      );
+    // Validasi format latitude & longitude jika ada
+    let lat = null;
+    let lng = null;
+
+    if (hasCoordinates) {
+      lat = parseFloat(latitude);
+      lng = parseFloat(longitude);
+
+      if (isNaN(lat) || isNaN(lng) || lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+        return NextResponse.json(
+          { message: 'Format koordinat tidak valid' },
+          { status: 400 }
+        );
+      }
+    }
     }
 
     // ====== NORMALIZE EMAIL ======
